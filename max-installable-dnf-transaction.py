@@ -155,6 +155,19 @@ for pkg in a:
             if c_pkg.name in no_conflicts:
                 no_conflicts.remove(c_pkg)
             conflicts[pkg] = conflicts.get(pkg, []) + [c_pkg]
+    for provide in pkg.provides:
+        if str(provide)[0] != '/':
+            continue
+        p_q = a.filter(provides=provide)
+        for op in p_q:
+            if op == pkg:
+                continue
+            log.info('{} conflicts with {} due to conflicting Provides: {}'.format(pkg, op, provide))
+            if pkg.name in no_conflicts:
+                no_conflicts.remove(pkg)
+            if c_pkg.name in no_conflicts:
+                no_conflicts.remove(c_pkg)
+            conflicts[pkg] = conflicts.get(pkg, []) + [c_pkg]
 
 log.debug(repr(conflicts))
 
