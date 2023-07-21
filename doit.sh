@@ -7,7 +7,7 @@ d_run ()
 
 d_build ()
 {
-    $D build -t $1 -f $2 ctx/
+	(cd ctx; $D build -t $1 -f $2 .)
 }
 
 container=${container:-fedora}
@@ -18,3 +18,4 @@ mkdir -p ctx/
 cp max-installable-dnf-transaction.py ctx/
 d_build hackery-doit Dockerfile.doit
 d_run /mnt hackery-doit "python3 max-installable-dnf-transaction.py $container"
+#d_build noextradeps1st_batech1000 Dockerfile.noextradeps1st_batched1000

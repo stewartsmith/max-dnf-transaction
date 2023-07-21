@@ -9,7 +9,7 @@ log.setLevel(logging.INFO)
 log.debug("Hello World!")
 
 container = sys.argv[1]
-from_container = f'FROM {container}\nRUN dnf update -y\nRUN dnf makecache\n\n'
+from_container = f'FROM {container}\nRUN dnf update -y\nRUN dnf makecache\nRUN echo "max_parallel_downloads=20" >> /etc/dnf/dnf.conf\n\n'
 dnf_install = "dnf --setopt=install_weak_deps=False install -y "
 run_dnf_install = f'RUN {dnf_install}'
 
@@ -97,6 +97,7 @@ hardcoded_conflicts = {
 #          file /usr/bin/systemd-sysusers from install of systemd-253.4-1.fc38.ppc64le conflicts with file from package systemd-standalone-sysusers-253.5-1.fc38.ppc64le
 #  file /usr/lib/systemd/systemd-shutdown from install of systemd-253.4-1.fc38.ppc64le conflicts with file from package systemd-standalone-shutdown-253.5-1.fc38.ppc64le
 #          file /usr/bin/systemd-tmpfiles from install of systemd-253.4-1.fc38.ppc64le conflicts with file from package systemd-standalone-tmpfiles-253.5-1.fc38.ppc64le
+    'systemd-standalone-sysusers': 'systemd',
     'systemd': 'systemd-standalone-sysusers',
     'systemd': 'systemd-standalone-shutdown',
     'systemd': 'systemd-standalone-tmpfiles',
@@ -122,6 +123,67 @@ hardcoded_conflicts = {
 #   file /usr/bin/disco from install of mono-web-6.12.0-11.fc38.ppc64le conflicts with file from package golang-github-googleapis-gnostic-0.5.3-10.fc38.ppc64le
     'mono-web': 'golang-github-googleapis-gnostic',
     'netopeer2': 'systemd-standalone-sysusers',
+#   file /usr/bin/build conflicts between attempted installs of golang-github-gohugoio-testmodbuilder-0-0.14.20201030git72e1e0c.fc38.x86_64 and edk2-tools-python-20230524-3.fc38.noarch
+    'edk2-tools-python': 'golang-github-gohugoio-testmodbuilder',
+# AL2023 minimal things
+    'curl': 'curl-minimal',
+    'gnupg2': 'gnupg2-minimal',
+# more AL2023 things
+# Error:
+# Problem 1: package maven-amazon-corretto11-1:3.8.4-3.amzn2023.0.4.noarch conflicts with maven-jdk-binding provided by maven-amazon-corretto17-1:3.8.4-3.amzn2023.0.4.noarch
+#   - package maven-amazon-corretto17-1:3.8.4-3.amzn2023.0.4.noarch conflicts with maven-jdk-binding provided by maven-amazon-corretto11-1:3.8.4-3.amzn2023.0.4.noarch
+# - conflicting requests
+    'maven-amazon-corretto17': 'maven-amazon-corretto11',
+    'maven-amazon-corretto11': 'maven-amazon-corretto17',
+# Problem 2: problem with installed package dnf-4.12.0-2.amzn2023.0.4.noarch
+# - package microdnf-dnf-3.8.1-1.amzn2023.0.1.x86_64 conflicts with dnf provided by dnf-4.12.0-2.amzn2023.0.4.noarch
+# - conflicting requests
+    'microdnf-dnf': 'dnf',
+    'dnf': 'microdnf-dnf',
+#   file /usr/share/xmvn/conf/toolchains.xml conflicts between attempted installs of maven-local-amazon-corretto11-6.0.0-7.amzn2023.0.5.noarch and maven-local-amazon-corretto8-6.0.0-7.amzn2023.0.5.noarch
+#  file /usr/share/xmvn/conf/toolchains.xml conflicts between attempted installs of maven-local-amazon-corretto17-6.0.0-7.amzn2023.0.5.noarch and maven-local-amazon-corretto11-6.0.0-7.amzn2023.0.5.noarch
+    'maven-local-amazon-corretto11': 'maven-local-amazon-corretto17',
+# Problem: problem with installed package php8.1-common-8.1.16-1.amzn2023.0.2.x86_64
+#   - package php8.1-common-8.1.16-1.amzn2023.0.2.x86_64 conflicts with php-common > 8.1.99 provided by php8.2-common-8.2.7-1.amzn2023.0.1.x86_64
+#   - package php8.2-common-8.2.7-1.amzn2023.0.1.x86_64 conflicts with php-common < 8.2.0 provided by php8.1-common-8.1.16-1.amzn2023.0.2.x86_64
+#    - package php8.2-common-8.2.7-1.amzn2023.0.1.x86_64 conflicts with php-common < 8.2.0 provided by php8.1-common-8.1.16-1.amzn2023.0.1.x86_64
+#    - package php8.2-common-8.2.7-1.amzn2023.0.1.x86_64 conflicts with php-common < 8.2.0 provided by php8.1-common-8.1.14-1.amzn2023.0.2.x86_64
+#    - package php8.2-pspell-8.2.7-1.amzn2023.0.1.x86_64 requires php-common(x86-64) = 8.2.7-1.amzn2023.0.1, but none of the providers can be installed
+    'php8.1-common': 'php-common',
+    'php8.2-common': 'php-common',
+    'php-common': 'php8.1-common',
+    'php-common': 'php8.2-common',
+    'php8.2-pspell': 'php-common',
+    'php8.2-pspell': 'php8.1-pspell',
+    'php8.2-enchant': 'php8.2-enchant',
+    'php8.2-tidy': 'php8.1-tidy',
+    'php8.2-gmp': 'php8.1-gmp',
+    'php8.2-snmp': 'php8.1-snmp',
+    'php8.2-dba': 'php8.1-dba',
+    'php8.2-ldap': 'php8.1-ldap',
+    'php8.2-gd': 'php8.1-gd',
+    'php8.2-bcmath': 'php8.1-bcmath',
+    'php8.2-odbc': 'php8.1-odbc',
+    'php8.2-pgsql': 'php8.1-pgsql',
+    'php8.2-pdo': 'php8.1-pdo',
+    'php8.2-ffi': 'php8.1-ffi',
+    'php8.2-soap': 'php8.1-soap',
+    'php8.2-mysqlnd': 'php8.1-mysqlnd',
+    'php8.2-intl': 'php8.1-intl',
+    'php8.2-opcache': 'php8.1-opcache',
+    'php8.2-mbstring': 'php8.1-mbstring',
+    'php8.2-devel': 'php8.1-devel',
+    'php8.2-dbg': 'php8.1-dbg',
+    'php8.2-xml': 'php8.1-xml',
+    'php8.2-fpm': 'php8.1-xml',
+    'php8.2-embedded': 'php8.1-embedded',
+#  Problem 2: problem with installed package libpq-devel-15.0-2.amzn2023.0.1.x86_64
+#  - package postgresql15-private-devel-15.0-1.amzn2023.0.2.x86_64 conflicts with libpq-devel provided by libpq-devel-15.0-2.amzn2023.0.1.x86_64
+#  - package postgresql15-server-devel-15.0-1.amzn2023.0.2.x86_64 requires postgresql15-private-devel, but none of the providers can be installed
+    'postgresql15-private-devel': 'libpq-devel',
+    'gnupg2-smime': 'gnupg2-minimal',
+    'libcurl-minimal': 'libcurl',
+
 }
 for k,v in hardcoded_conflicts.items():
     for p in a.filter(name=k):
@@ -206,6 +268,11 @@ for k in closure_problems.keys():
         print(f"Removing {k.name} due to repoclosure issues")
         no_conflicts.remove(k)
 
+for k in conflicts.keys():
+    if k in no_conflicts:
+        print(f"Removing {k.name} due to conflict")
+        no_conflicts.remove(k)
+
 with open('Dockerfile.onetxn', 'w') as f:
     f.write(from_container)
     f.write(run_dnf_install + ' '.join([n.name for n in no_conflicts]))
@@ -281,16 +348,19 @@ for step in [100,200,300,400,500,1000]:
         f.write(from_container)
         pkgs = [x.name for x in sorted(no_extra_deps, key=lambda x: x.downloadsize)]
         for i in range(0, len(pkgs), step):
+            f.write(f"# no_extra_deps step {i}\n")
             f.write(run_dnf_install)
             f.write(' '.join(pkgs[i:i+step]))
             f.write('\n')
+        f.write("# DONE with no_extra_deps\n\n")
         nc_pkgs = []
         for x in no_conflicts:
             if x.name not in pkgs and x.name not in just_broken:
                 nc_pkgs.append(x)
         n_c = [x.name for x in sorted(nc_pkgs, key=lambda x: x.downloadsize)]
-        step=1
+        step=100
         for i in range(0, len(n_c), step):
+            f.write(f"# no_conflicts step {i}\n")
             l = ' '.join(n_c[i:i+step])
             f.write(run_dnf_install + f'{l}\n')
         f.write('\n')
